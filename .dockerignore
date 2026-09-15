@@ -1,0 +1,8 @@
+*
+!Dockerfile
+!requirements.lock
+!pyproject.toml
+!README.md
+!LICENSE
+!neurodynamic_mcp/
+!neurodynamic_mcp/*.py

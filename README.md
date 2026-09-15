@@ -139,3 +139,17 @@ This repository does not contain our private service deployment configuration,
 credentials, model weights, voice samples or customer data. The MIT licence does
 not grant free API access or rights to those separate assets. Use of the hosted
 APIs remains subject to their published prices, terms and privacy information.
+
+## Container and directory checks
+
+The root Dockerfile packages this local stdio connector for directory inspection.
+It runs as a non-root user and defaults to a zero purchase budget. There is no
+HTTP listener or hosted MCP service in this image. No wallet is included.
+
+Build with `docker build -t neurodynamic-mcp .`. Run discovery with
+`docker run --rm -i neurodynamic-mcp`. Persist `/data` if explicitly enabling
+purchases later; follow the wallet and budget instructions above.
+
+CI checks initialization and all six tool definitions inside a read-only,
+network-disabled container without a funded wallet. Dockerfile availability does
+not by itself mean that a directory has completed its own safety checks.
