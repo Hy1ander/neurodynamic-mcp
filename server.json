@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "tech.neurodynamic/audio-llm",
+  "title": "NeuroDynamic Audio and LLM APIs",
+  "description": "Discover voices and prices; buy narration, transcription and LLM text with capped USDC payments.",
+  "version": "1.0.0",
+  "websiteUrl": "https://x402.neurodynamic.tech/integrations/mcp",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "neurodynamic-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "uvx"
+    }
+  ]
+}

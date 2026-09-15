@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurodynamic-mcp"
+version = "1.0.0"
+description = "Audio and LLM APIs for agents: free discovery and explicitly capped USDC purchases"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["mcp==2.2.0", "httpx==0.28.1", "x402[evm]==2.16.0"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: POSIX"]
+
+[project.urls]
+Homepage = "https://x402.neurodynamic.tech/"
+Documentation = "https://x402.neurodynamic.tech/integrations/mcp"
+Support = "https://neurodynamic.tech/contact"
+
+[project.scripts]
+neurodynamic-mcp = "neurodynamic_mcp.server:main"
+
+[tool.setuptools.packages.find]
+include = ["neurodynamic_mcp*"]
