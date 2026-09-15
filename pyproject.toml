@@ -7,6 +7,7 @@ name = "neurodynamic-mcp"
 version = "1.0.0"
 description = "Audio and LLM APIs for agents: free discovery and explicitly capped USDC purchases"
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = ["mcp==2.2.0", "httpx==0.28.1", "x402[evm]==2.16.0"]
 classifiers = ["Programming Language :: Python :: 3", "Operating System :: POSIX"]

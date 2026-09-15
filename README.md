@@ -127,3 +127,15 @@ Unit tests use synthetic HTTP responses and an unfunded temporary signing key. T
 Release validation also completed three separately authorised operator purchases (narration, transcription and LLM), total 0.035 USDC, followed by no-charge duplicate and status checks. These are test activity, not customer sales.
 
 <!-- mcp-name: tech.neurodynamic/audio-llm -->
+
+## Licence and scope
+
+The connector code, tests, documentation and example client configuration in
+this repository are available under the [MIT licence](LICENSE). You may use,
+modify and redistribute them, including commercially, while retaining the
+copyright and licence notice. Third-party dependencies retain their own licences.
+
+This repository does not contain our private service deployment configuration,
+credentials, model weights, voice samples or customer data. The MIT licence does
+not grant free API access or rights to those separate assets. Use of the hosted
+APIs remains subject to their published prices, terms and privacy information.
