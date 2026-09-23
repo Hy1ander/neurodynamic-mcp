@@ -1,0 +1,87 @@
+name: Publish reviewed release to PyPI
+run-name: Publish ${{ inputs.release_tag }} with Trusted Publishing
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing reviewed stable tag, such as v1.0.1 (must match package version)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: pypi-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'Hy1ander/neurodynamic-mcp' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select a reviewed version tag from main
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          commit=$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")
+          git merge-base --is-ancestor "$commit" origin/main
+          git checkout --detach "$commit"
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Check version and reject an already published release
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          python - <<'PYCODE'
+          import os, tomllib, urllib.request, urllib.error
+          with open('pyproject.toml', 'rb') as f:
+              project = tomllib.load(f)['project']
+          version = project['version']
+          assert project['name'] == 'neurodynamic-mcp'
+          assert 'v' + version == os.environ['RELEASE_TAG']
+          try:
+              urllib.request.urlopen('https://pypi.org/pypi/neurodynamic-mcp/' + version + '/json', timeout=30)
+          except urllib.error.HTTPError as e:
+              if e.code != 404:
+                  raise
+          else:
+              raise SystemExit('Version already published; do not replace immutable files')
+          PYCODE
+      - name: Build and test without wallet credentials
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0 .
+          python -m unittest discover -s tests -v
+          python -m build
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/neurodynamic-mcp
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: python-distributions
+          path: dist/
+      - name: Publish with short-lived OIDC credentials and attestations
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
+        with:
+          packages-dir: dist/
+          attestations: true
