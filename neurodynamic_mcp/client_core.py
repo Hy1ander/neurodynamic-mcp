@@ -17,7 +17,7 @@ import httpx
 ORIGIN = 'https://api.neurodynamic.tech'
 NETWORK = 'eip155:8453'
 ASSET = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
-PAYEE = '0xa369ac3412360206db63507b190e691c0c5b9f3e'
+PAYEE = '0xc9ec9b779e5e94a8c580bb7f9f79c3d7dc113cd0'
 SERVICES = {
     'narration': ('/v1/audio/speech', 5000, 'audio/mpeg', '.mp3'),
     'transcription': ('/v1/audio/transcriptions', 10000, 'application/json', '.json'),
@@ -77,7 +77,7 @@ class Buyer:
     def client(self):
         return httpx.AsyncClient(timeout=httpx.Timeout(100, connect=10), follow_redirects=False,
                                  trust_env=False, transport=self.transport,
-                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.0', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
+                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.0.1', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
 
     async def request(self, method, path, limit=2*1024*1024, **kwargs):
         async with self.client() as c:

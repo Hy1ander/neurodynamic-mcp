@@ -34,6 +34,7 @@ class Tests(unittest.IsolatedAsyncioTestCase):
     def tearDown(self):
         self.tmp.cleanup()
     def handler(self, request):
+        self.assertEqual(request.headers.get("user-agent"), "NeuroDynamic-MCP/1.0.1")
         if 'payment-signature' not in request.headers:
             return httpx.Response(402, json=self.q)
         self.paid += 1
@@ -54,7 +55,7 @@ class Tests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError): await self.buy()
         self.assertEqual(self.signed,0)
     async def test_reject_quote_substitution(self):
-        for field,value in [('payTo','0x'+'1'*40),('network','eip155:137'),('amount','99999'),('asset','0x'+'2'*40),('scheme','upto')]:
+        for field,value in [('payTo','0xa369aC3412360206DB63507b190E691c0C5B9F3e'),('payTo','0x'+'1'*40),('network','eip155:137'),('amount','99999'),('asset','0x'+'2'*40),('scheme','upto')]:
             self.q=quote(); self.q['accepts'][0][field]=value
             with self.assertRaises(ValueError): await self.buy()
         self.q=quote(); self.q['resource']['url']='https://evil.example/'
@@ -107,6 +108,9 @@ class Tests(unittest.IsolatedAsyncioTestCase):
         self.buyer.transport=httpx.MockTransport(lambda r:httpx.Response(307,headers={'location':'https://evil.example'}))
         with self.assertRaises(ValueError):await self.buy()
         self.assertEqual(self.signed,0)
+    def test_receiver_migration_pin(self):
+        self.assertEqual(PAYEE, '0xc9ec9b779e5e94a8c580bb7f9f79c3d7dc113cd0')
+
     def test_private_file_permissions_and_symlink(self):
         self.key.chmod(0o644)
         with self.assertRaises(ValueError): private_read(self.key)

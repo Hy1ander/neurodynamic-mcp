@@ -3,13 +3,13 @@
   "name": "tech.neurodynamic/audio-llm",
   "title": "NeuroDynamic Audio and LLM APIs",
   "description": "Discover voices and prices; buy narration, transcription and LLM text with capped USDC payments.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "websiteUrl": "https://x402.neurodynamic.tech/integrations/mcp",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "neurodynamic-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       },

@@ -1,4 +1,6 @@
-# NeuroDynamic MCP client — 1.0.0
+Receiver update 2026-10-24: version 1.0.1 pins the current Base USDC recipient. Version 1.0.0 rejects new purchases after this receiver migration. Existing local purchase records remain intact.
+
+# NeuroDynamic MCP client — 1.0.1
 
 Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
 
@@ -24,7 +26,7 @@ Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
 
 Current purchases use native **USDC on Base**, x402 v2 exact, an EOA wallet. A future merchant network option will not silently change which network this client signs for. SOL-token payments, other chains, smart accounts and automatic bridging are not supported by this client release.
 
-Private cloning is discoverable here; purchase/enrolment stays in the [approved-account workflow](https://api.neurodynamic.tech/cloning). This adapter does not enrol voices, bypass consent review or hold cloning bearer credentials. The [audio starter](https://neurodynamic.tech/integrations/audio-starter-v2-20260910.zip) includes the separate workflow.
+Private cloning is discoverable here; purchase/enrolment stays in the [approved-account workflow](https://api.neurodynamic.tech/cloning). This adapter does not enrol voices, bypass consent review or hold cloning bearer credentials. The [audio starter](https://neurodynamic.tech/dl/integrations/audio-starter-v3-20261024.zip) includes the separate workflow.
 
 This runs **locally on the requesting machine using stdio**. It is not a hosted `/mcp` URL, and it does not open a port. No NeuroDynamic account is needed for catalogue narration, transcription or LLM purchases.
 
@@ -36,7 +38,7 @@ Install the published package in a virtual environment:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install neurodynamic-mcp==1.0.0
+.venv/bin/pip install neurodynamic-mcp==1.0.1
 ```
 
 Alternatively, from a checkout of this repository, use `.venv/bin/pip install .`.
@@ -56,7 +58,7 @@ Add this entry to your MCP application and replace the Python path:
 }
 ```
 
-Package: https://pypi.org/project/neurodynamic-mcp/1.0.0/
+Package: https://pypi.org/project/neurodynamic-mcp/1.0.1/
 
 Official registry name: `tech.neurodynamic/audio-llm`.
 
