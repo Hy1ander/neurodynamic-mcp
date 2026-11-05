@@ -1,6 +1,6 @@
-Receiver update 2026-10-24: version 1.0.1 pins the current Base USDC recipient. Version 1.0.0 rejects new purchases after this receiver migration. Existing local purchase records remain intact.
+Receiver update 2026-11-05: version 1.1.0 pins the current Base USDC recipient. Existing local purchase records remain intact.
 
-# NeuroDynamic MCP client — 1.0.1
+# NeuroDynamic MCP client — 1.1.0
 
 Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
 
@@ -21,12 +21,20 @@ Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
 | quote | Check the live price and payment details | Free |
 | purchase_json | Generate catalogue narration or either LLM's text | Explicit purchase |
 | transcribe_file | Upload and transcribe your audio | Explicit purchase |
+| transcript_package_file | Upload audio for transcript package output (8 MiB, 60 seconds) | Explicit purchase |
+| extract_pdf_file | Extract text from a text-native PDF (10 MiB, 20 pages) | Explicit purchase |
+| ocr_image_file | OCR printed English from PNG/JPEG (10 MiB, 12 megapixels) | Explicit purchase |
 | payment_status | Inspect an existing purchase; query LLM payment recovery | Free |
 | budget_status | See the cumulative client spending cap | Free |
 
 Current purchases use native **USDC on Base**, x402 v2 exact, an EOA wallet. A future merchant network option will not silently change which network this client signs for. SOL-token payments, other chains, smart accounts and automatic bridging are not supported by this client release.
 
 Private cloning is discoverable here; purchase/enrolment stays in the [approved-account workflow](https://api.neurodynamic.tech/cloning). This adapter does not enrol voices, bypass consent review or hold cloning bearer credentials. The [audio starter](https://neurodynamic.tech/dl/integrations/audio-starter-v3-20261024.zip) includes the separate workflow.
+
+The three file services above are each 0.01 USDC on Base. They accept only
+local files under the configured input directory and pin the live resource,
+receiver, token, network and amount before signing. Transcript packages do not
+provide speaker identification, notes or translation.
 
 This runs **locally on the requesting machine using stdio**. It is not a hosted `/mcp` URL, and it does not open a port. No NeuroDynamic account is needed for catalogue narration, transcription or LLM purchases.
 
@@ -38,7 +46,7 @@ Install the published package in a virtual environment:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install neurodynamic-mcp==1.0.1
+.venv/bin/pip install neurodynamic-mcp==1.1.0
 ```
 
 Alternatively, from a checkout of this repository, use `.venv/bin/pip install .`.
@@ -58,7 +66,7 @@ Add this entry to your MCP application and replace the Python path:
 }
 ```
 
-Package: https://pypi.org/project/neurodynamic-mcp/1.0.1/
+Package: https://pypi.org/project/neurodynamic-mcp/1.1.0/
 
 Official registry name: `tech.neurodynamic/audio-llm`.
 

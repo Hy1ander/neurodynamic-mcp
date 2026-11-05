@@ -23,10 +23,15 @@ SERVICES = {
     'transcription': ('/v1/audio/transcriptions', 10000, 'application/json', '.json'),
     'abliterated': ('/v1/llm/abliterated/completions', 20000, 'application/json', '.json'),
     'abliterated-large': ('/v1/llm/abliterated-large/completions', 35000, 'application/json', '.json'),
+    'transcript-package': ('/v1/audio/transcript-packages', 10000, 'application/json', '.json'),
+    'document-extract': ('/v1/documents/extract', 10000, 'application/json', '.json'),
+    'document-ocr': ('/v1/documents/ocr', 10000, 'application/json', '.json'),
 }
 DOCS = {'services': '/.well-known/ai-services.json', 'voices': '/v1/audio/voices',
         'schema': '/openapi.json', 'cloning': '/v1/audio/cloning/capabilities'}
 VOICES = ['af_heart', 'af_bella', 'bf_emma', 'bf_alice', 'bm_george', 'am_michael', 'am_fenrir']
+UPLOAD_LIMITS = {'transcript-package': 8 * 1024 * 1024, 'document-extract': 10 * 1024 * 1024,
+                 'document-ocr': 10 * 1024 * 1024}
 
 
 def canonical(value):
@@ -43,6 +48,39 @@ def private_read(path, maximum=4096):
         if len(content) > maximum:
             raise ValueError('Private file exceeds size limit')
         return content
+
+
+def _pdf_page_count(data):
+    if not data.startswith(b'%PDF-'):
+        raise ValueError('PDF input must have a PDF signature')
+    # This is only a conservative preflight for ordinary uncompressed markers.
+    # Object streams and compressed PDFs are counted authoritatively by the gateway.
+    return len(re.findall(rb'/Type\s*/Page\b', data))
+
+
+def _image_dimensions(data, mime):
+    if mime == 'image/png':
+        if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 24:
+            raise ValueError('PNG input has an invalid signature')
+        import struct
+        return struct.unpack('>II', data[16:24])
+    if mime == 'image/jpeg':
+        if not data.startswith(b'\xff\xd8'):
+            raise ValueError('JPEG input has an invalid signature')
+        pos = 2
+        while pos + 9 < len(data):
+            if data[pos] != 0xff:
+                pos += 1; continue
+            marker = data[pos + 1]; pos += 2
+            if marker in (0xd8, 0xd9): continue
+            if pos + 2 > len(data): break
+            length = int.from_bytes(data[pos:pos + 2], 'big')
+            if marker in range(0xc0, 0xc4) or marker in range(0xc5, 0xc8) or marker in range(0xc9, 0xcc) or marker in range(0xcd, 0xd0):
+                if length >= 7 and pos + 7 <= len(data):
+                    return int.from_bytes(data[pos + 3:pos + 5], 'big'), int.from_bytes(data[pos + 5:pos + 7], 'big')
+            pos += length
+        raise ValueError('JPEG dimensions could not be read')
+    raise ValueError('OCR accepts only PNG or JPEG')
 
 
 def validate_body(service, body):
@@ -77,7 +115,7 @@ class Buyer:
     def client(self):
         return httpx.AsyncClient(timeout=httpx.Timeout(100, connect=10), follow_redirects=False,
                                  trust_env=False, transport=self.transport,
-                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.0.1', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
+                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.1.0', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
 
     async def request(self, method, path, limit=2*1024*1024, **kwargs):
         async with self.client() as c:
@@ -162,7 +200,7 @@ class Buyer:
             payload = await payload
         return base64.b64encode(canonical(payload.model_dump(mode='json', by_alias=True, exclude_none=True)).encode()).decode()
 
-    async def purchase(self, service, body, purchase_id, confirm_purchase, raw_audio=None):
+    async def purchase(self, service, body, purchase_id, confirm_purchase, raw_audio=None, raw_upload=None, upload_mime=None):
         if confirm_purchase is not True:
             raise ValueError('Explicit confirm_purchase=true is required')
         if not self.cap or not self.key_file:
@@ -175,6 +213,25 @@ class Buyer:
             if not raw_audio or len(raw_audio) > 12*1024*1024 or not re.fullmatch('[a-z]{2}', body.get('language', '')):
                 raise ValueError('Audio up to 12 MiB and a two-letter language are required')
             identity = {'language': body['language'], 'audio_sha256': hashlib.sha256(raw_audio).hexdigest()}
+        elif service in UPLOAD_LIMITS:
+            if not raw_upload or len(raw_upload) > UPLOAD_LIMITS[service]:
+                raise ValueError('Uploaded file exceeds the service size limit')
+            if service == 'transcript-package':
+                if not re.fullmatch('[a-z]{2}', body.get('language', '')):
+                    raise ValueError('Transcript package requires a two-letter language')
+                identity = {'language': body['language'], 'file_sha256': hashlib.sha256(raw_upload).hexdigest()}
+            elif service == 'document-extract':
+                pages = _pdf_page_count(raw_upload)
+                if pages > 20:
+                    raise ValueError('Text-native PDF is limited to 20 pages')
+                identity = {'file_sha256': hashlib.sha256(raw_upload).hexdigest(), 'pages': pages}
+            else:
+                if upload_mime not in ('image/png', 'image/jpeg'):
+                    raise ValueError('OCR accepts only PNG or JPEG')
+                width, height = _image_dimensions(raw_upload, upload_mime)
+                if width <= 0 or height <= 0 or width * height > 12_000_000:
+                    raise ValueError('OCR image is limited to 12 megapixels')
+                identity = {'file_sha256': hashlib.sha256(raw_upload).hexdigest(), 'mime': upload_mime, 'width': width, 'height': height}
         else:
             validate_body(service, body)
             identity = body
@@ -203,6 +260,13 @@ class Buyer:
                 if service == 'transcription':
                     args.update(data={'model': 'whisper-1', 'response_format': 'json', 'language': body['language']},
                                 files={'file': ('audio', raw_audio, 'application/octet-stream')})
+                elif service == 'transcript-package':
+                    args.update(data={'model': 'whisper-1', 'response_format': 'json', 'language': body['language']},
+                                files={'file': ('audio', raw_upload, 'application/octet-stream')})
+                elif service == 'document-extract':
+                    args.update(content=raw_upload, headers={'PAYMENT-SIGNATURE': proof, 'Content-Type': 'application/pdf'})
+                elif service == 'document-ocr':
+                    args.update(content=raw_upload, headers={'PAYMENT-SIGNATURE': proof, 'Content-Type': upload_mime})
                 else:
                     args['json'] = body
                 status, headers, data = await self.request('POST', path, limit=8*1024*1024 if service == 'narration' else 131072, **args)
@@ -216,9 +280,13 @@ class Buyer:
                     raise ValueError('Unconfirmed settlement receipt')
                 if service != 'narration':
                     result = json.loads(data)
-                    if not isinstance(result.get('text'), str):
+                    if service in ('transcription', 'transcript-package') and not isinstance(result.get('text'), str):
                         raise ValueError('Unexpected result')
-                    if service != 'transcription' and (result.get('model') != service or result.get('ai_generated') is not True):
+                    if service == 'document-extract' and (not isinstance(result.get('markdown'), str) or not isinstance(result.get('pages'), list)):
+                        raise ValueError('Unexpected document extraction result')
+                    if service == 'document-ocr' and (not isinstance(result.get('markdown'), str) or not isinstance(result.get('pages'), list)):
+                        raise ValueError('Unexpected OCR result')
+                    if service in ('abliterated', 'abliterated-large') and (result.get('model') != service or result.get('ai_generated') is not True):
                         raise ValueError('Unexpected LLM result')
                 output = self.state / (purchase_id + suffix)
                 fd = os.open(output, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
