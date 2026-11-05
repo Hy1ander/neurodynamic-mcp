@@ -10,6 +10,10 @@ assert r.returncode==0,r.stderr
 responses=[json.loads(line) for line in r.stdout.splitlines() if line.strip()]
 listing=next(x for x in responses if x.get('id')==2)
 assert 'error' not in listing,listing
-names={t['name'] for t in listing['result']['tools']}
-assert len(names)==6,names
-print('Offline non-root read-only container initialized; six tools listed; no network/payment.')
+tools=listing['result']['tools']
+names={t['name'] for t in tools}
+expected={'catalogue','quote','budget_status','payment_status','purchase_json',
+          'transcribe_file','transcript_package_file','extract_pdf_file','ocr_image_file'}
+assert names==expected,{'missing':sorted(expected-names),'unexpected':sorted(names-expected)}
+assert len(tools)==len(expected),'Duplicate tool names returned'
+print('Offline non-root read-only container initialized; all nine expected tools listed; no network/payment.')
