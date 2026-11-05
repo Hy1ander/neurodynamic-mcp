@@ -1,8 +1,8 @@
-Receiver update 2026-11-05: version 1.1.1 pins the current Base USDC recipient. Existing local purchase records remain intact.
+Security update 2026-11-05: version 1.1.2 sets minimum safe dependency versions and refreshes the tested dependency lock. The Base USDC recipient and existing local purchase records are unchanged.
 
-# NeuroDynamic MCP client — 1.1.1
+# NeuroDynamic MCP client — 1.1.2
 
-Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
+Connect an MCP-compatible agent to NeuroDynamic audio, captions, PDF extraction, image OCR and LLM APIs.
 
 **Free by default.** Discover services, compare seven voices and inspect prices without a wallet. Purchases are optional and explicitly enabled by the wallet owner.
 
@@ -46,12 +46,16 @@ Install the published package in a virtual environment:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install neurodynamic-mcp==1.1.1
+.venv/bin/pip install neurodynamic-mcp==1.1.2
 ```
 
 Alternatively, from a checkout of this repository, use `.venv/bin/pip install .`.
-The included `requirements.lock` records the dependency versions tested for the
-original release; the package pins its direct dependencies in `pyproject.toml`.
+The included `requirements.lock` records the dependency versions tested for this
+release. To reproduce that environment, install `-r requirements.lock` before
+installing the package. The package pins its core direct dependencies and enforces
+security minimums for affected transitive dependencies in `pyproject.toml`.
+CI checks the lock, package versions, known dependency advisories and all nine tools.
+A clean advisory scan is a dated check, not a guarantee against unknown vulnerabilities.
 
 Add this entry to your MCP application and replace the Python path:
 
@@ -66,7 +70,7 @@ Add this entry to your MCP application and replace the Python path:
 }
 ```
 
-Package: https://pypi.org/project/neurodynamic-mcp/1.1.1/
+Package: https://pypi.org/project/neurodynamic-mcp/1.1.2/
 
 Official registry name: `tech.neurodynamic/audio-llm`.
 

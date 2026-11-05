@@ -3,13 +3,13 @@
   "name": "tech.neurodynamic/audio-llm",
   "title": "NeuroDynamic Audio, Captions, Documents and LLM APIs",
   "description": "Audio, captions, PDF extraction, image OCR and LLM APIs with capped USDC payments.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "websiteUrl": "https://x402.neurodynamic.tech/integrations/mcp",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "neurodynamic-mcp",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "transport": {
         "type": "stdio"
       },
