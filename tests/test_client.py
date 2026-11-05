@@ -34,7 +34,7 @@ class Tests(unittest.IsolatedAsyncioTestCase):
     def tearDown(self):
         self.tmp.cleanup()
     def handler(self, request):
-        self.assertEqual(request.headers.get("user-agent"), "NeuroDynamic-MCP/1.1.0")
+        self.assertEqual(request.headers.get("user-agent"), "NeuroDynamic-MCP/1.1.1")
         if 'payment-signature' not in request.headers:
             return httpx.Response(402, json=self.q)
         self.paid += 1

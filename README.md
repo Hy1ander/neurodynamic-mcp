@@ -1,6 +1,6 @@
-Receiver update 2026-11-05: version 1.1.0 pins the current Base USDC recipient. Existing local purchase records remain intact.
+Receiver update 2026-11-05: version 1.1.1 pins the current Base USDC recipient. Existing local purchase records remain intact.
 
-# NeuroDynamic MCP client — 1.1.0
+# NeuroDynamic MCP client — 1.1.1
 
 Connect an MCP-compatible agent to NeuroDynamic audio and LLM APIs.
 
@@ -46,7 +46,7 @@ Install the published package in a virtual environment:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install neurodynamic-mcp==1.1.0
+.venv/bin/pip install neurodynamic-mcp==1.1.1
 ```
 
 Alternatively, from a checkout of this repository, use `.venv/bin/pip install .`.
@@ -66,7 +66,7 @@ Add this entry to your MCP application and replace the Python path:
 }
 ```
 
-Package: https://pypi.org/project/neurodynamic-mcp/1.1.0/
+Package: https://pypi.org/project/neurodynamic-mcp/1.1.1/
 
 Official registry name: `tech.neurodynamic/audio-llm`.
 

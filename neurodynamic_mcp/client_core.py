@@ -115,7 +115,7 @@ class Buyer:
     def client(self):
         return httpx.AsyncClient(timeout=httpx.Timeout(100, connect=10), follow_redirects=False,
                                  trust_env=False, transport=self.transport,
-                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.1.0', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
+                                 headers={'User-Agent': 'NeuroDynamic-MCP/1.1.1', 'X-Client-Name': 'NeuroDynamic MCP', 'X-Discovery-Source': 'direct'})
 
     async def request(self, method, path, limit=2*1024*1024, **kwargs):
         async with self.client() as c:
