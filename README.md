@@ -29,12 +29,12 @@ Connect an MCP-compatible agent to NeuroDynamic audio, captions, PDF extraction,
 
 Current purchases use native **USDC on Base**, x402 v2 exact, an EOA wallet. A future merchant network option will not silently change which network this client signs for. SOL-token payments, other chains, smart accounts and automatic bridging are not supported by this client release.
 
-Private cloning is discoverable here; purchase/enrolment stays in the [approved-account workflow](https://api.neurodynamic.tech/cloning). This adapter does not enrol voices, bypass consent review or hold cloning bearer credentials. The [audio starter](https://neurodynamic.tech/dl/integrations/audio-starter-v3-20261024.zip) includes the separate workflow.
+Private cloning is discoverable here; purchase/enrolment stays in the [approved-account workflow](https://api.neurodynamic.tech/cloning). This adapter does not enrol voices, bypass consent review or hold cloning bearer credentials. The [audio starter](https://neurodynamic.tech/dl/integrations/audio-starter-v4-20261105.zip) includes the separate workflow.
 
 The three file services above are each 0.01 USDC on Base. They accept only
 local files under the configured input directory and pin the live resource,
 receiver, token, network and amount before signing. Transcript packages do not
-provide speaker identification, notes or translation.
+provide speaker identification, notes or translation. Supply source audio (`.wav`, `.mp3`, `.flac` or `.ogg`); TXT/SRT/VTT and word timestamps are outputs, not accepted inputs. Audio duration is validated by the service before settlement; the client enforces file size but does not locally decode audio to measure duration.
 
 This runs **locally on the requesting machine using stdio**. It is not a hosted `/mcp` URL, and it does not open a port. No NeuroDynamic account is needed for catalogue narration, transcription or LLM purchases.
 
@@ -82,7 +82,7 @@ The adapter checks the live quote against reviewed merchant, native USDC token, 
 
 Use a dedicated low-balance Base wallet. Keep its raw hexadecimal private key in a file owned by the user running the client, with mode `0600`; never paste it into an agent prompt or tool call. Wallet keys stay on your requesting machine.
 
-Create a private state directory and, for transcription, a separate input directory. Both should be owned by that user. Audio input files must be mode `0600`. Only place files intended for upload in the input directory.
+Create a private state directory and, for audio/PDF/image uploads, a separate input directory. Both should be owned by that user. All input files must be mode `0600`. Only place files intended for upload in the input directory.
 
 Add owner-controlled `env` settings to the server configuration:
 
@@ -90,7 +90,7 @@ Add owner-controlled `env` settings to the server configuration:
 {
   "NEURODYNAMIC_BUYER_KEY_FILE": "/private/path/buyer.key",
   "NEURODYNAMIC_STATE": "/private/path/neurodynamic-purchases",
-  "NEURODYNAMIC_INPUT_DIR": "/private/path/audio-to-upload",
+  "NEURODYNAMIC_INPUT_DIR": "/private/path/files-to-upload",
   "NEURODYNAMIC_TOTAL_CAP_ATOMIC": "50000"
 }
 ```
@@ -125,6 +125,7 @@ The adapter reserves budget and saves the signed proof **before** sending a paid
 - Failed or uncertain purchases keep their budget reservation. They are not automatically refunded or retried.
 - Use `payment_status` after uncertainty. Contact support with the request ID or transaction hash if needed. Do not send private keys, signed proofs or your state database to support.
 - LLM outputs are not retained by NeuroDynamic after processing. A lost LLM response cannot be recovered by paying again safely; payment status is available without another charge.
+- Save successful results immediately. Transcript packages permit identical-proof recovery for one hour; PDF extraction and OCR permit regeneration for 15 minutes from admission, at most three attempts, at least 30 seconds apart and on the same processing release. After expiry the service returns HTTP 410 without another charge. The MCP adapter does not automatically perform these recovery requests.
 - Transcription/narration recovery follows each API guide. This initial adapter does not automatically resend an uncertain paid request; preserve the state and original input for support-assisted recovery.
 
 Your local state directory contains signed payment proofs, purchase metadata and returned files. Protect it like wallet material. Requests contain your chosen text/audio. Merchant operational metadata and service-specific retention are explained in the API guides. LLM requests go to third-party providers with separate retention policies; local server content-retention statements do not cover those providers or your client files.
@@ -138,7 +139,7 @@ Your local state directory contains signed payment proofs, purchase metadata and
 
 Unit tests use synthetic HTTP responses and an unfunded temporary signing key. The stdio smoke test performs only free live discovery/quotes and confirms purchases are disabled.
 
-Release validation also completed three separately authorised operator purchases (narration, transcription and LLM), total 0.035 USDC, followed by no-charge duplicate and status checks. These are test activity, not customer sales.
+Earlier audio/LLM release validation completed three separately authorised operator purchases (narration, transcription and LLM), total 0.035 USDC, followed by no-charge duplicate and status checks. These are test activity, not customer sales. On 2026-11-05, transcript packages, PDF extraction and image OCR each completed a separately authorised 0.01 USDC operator purchase, with output, no-charge replay and on-chain transfer checks (0.03 USDC total).
 
 <!-- mcp-name: tech.neurodynamic/audio-llm -->
 
@@ -164,6 +165,6 @@ Build with `docker build -t neurodynamic-mcp .`. Run discovery with
 `docker run --rm -i neurodynamic-mcp`. Persist `/data` if explicitly enabling
 purchases later; follow the wallet and budget instructions above.
 
-CI checks initialization and all six tool definitions inside a read-only,
+CI checks initialization and all nine tool definitions inside a read-only,
 network-disabled container without a funded wallet. Dockerfile availability does
 not by itself mean that a directory has completed its own safety checks.
